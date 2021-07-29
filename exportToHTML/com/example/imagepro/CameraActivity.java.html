@@ -1,0 +1,226 @@
+<html>
+<head>
+<title>CameraActivity.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #6897bb;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+CameraActivity.java</font>
+</center></td></tr></table>
+<pre><span class="s0">package </span><span class="s1">com.example.imagepro</span><span class="s0">;</span>
+
+<span class="s0">import </span><span class="s1">androidx.appcompat.app.AppCompatActivity</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">androidx.core.app.ActivityCompat</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">androidx.core.content.ContextCompat</span><span class="s0">;</span>
+
+<span class="s0">import </span><span class="s1">android.Manifest</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.app.Activity</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.content.pm.PackageManager</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.os.Bundle</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.os.Environment</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.util.Log</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.view.SurfaceView</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.view.View</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.view.Window</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.view.WindowManager</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.widget.ImageView</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.widget.Toast</span><span class="s0">;</span>
+
+<span class="s0">import </span><span class="s1">org.opencv.android.BaseLoaderCallback</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.android.CameraBridgeViewBase</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.android.LoaderCallbackInterface</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.android.OpenCVLoader</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.core.Core</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.core.CvType</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.core.Mat</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.imgcodecs.Imgcodecs</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">org.opencv.imgproc.Imgproc</span><span class="s0">;</span>
+
+<span class="s0">import </span><span class="s1">java.io.File</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">java.text.SimpleDateFormat</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">java.util.Date</span><span class="s0">;</span>
+
+<span class="s0">public class </span><span class="s1">CameraActivity </span><span class="s0">extends </span><span class="s1">Activity </span><span class="s0">implements </span><span class="s1">CameraBridgeViewBase.CvCameraViewListener2{</span>
+    <span class="s0">private static final </span><span class="s1">String TAG=</span><span class="s2">&quot;MainActivity&quot;</span><span class="s0">;</span>
+
+    <span class="s0">private </span><span class="s1">Mat mRgba</span><span class="s0">;</span>
+    <span class="s0">private </span><span class="s1">Mat mGray</span><span class="s0">;</span>
+    <span class="s0">private </span><span class="s1">CameraBridgeViewBase mOpenCvCameraView</span><span class="s0">;</span>
+
+    <span class="s0">private </span><span class="s1">ImageView flip_camera</span><span class="s0">;</span>
+    <span class="s0">private int </span><span class="s1">mCameraId=</span><span class="s3">0</span><span class="s0">;</span>
+    <span class="s0">private </span><span class="s1">ImageView take_picture_button</span><span class="s0">;</span>
+    <span class="s0">private int </span><span class="s1">take_image=</span><span class="s3">0</span><span class="s0">;</span>
+
+    <span class="s0">private </span><span class="s1">BaseLoaderCallback mLoaderCallback =</span><span class="s0">new </span><span class="s1">BaseLoaderCallback(</span><span class="s0">this</span><span class="s1">) {</span>
+        <span class="s1">@Override</span>
+        <span class="s0">public void </span><span class="s1">onManagerConnected(</span><span class="s0">int </span><span class="s1">status) {</span>
+            <span class="s0">switch </span><span class="s1">(status){</span>
+                <span class="s0">case </span><span class="s1">LoaderCallbackInterface</span>
+                        <span class="s1">.SUCCESS:{</span>
+                    <span class="s1">Log.i(TAG</span><span class="s0">,</span><span class="s2">&quot;OpenCv Is loaded&quot;</span><span class="s1">)</span><span class="s0">;</span>
+                    <span class="s1">mOpenCvCameraView.enableView()</span><span class="s0">;</span>
+                <span class="s1">}</span>
+                <span class="s0">default</span><span class="s1">:</span>
+                <span class="s1">{</span>
+                    <span class="s0">super</span><span class="s1">.onManagerConnected(status)</span><span class="s0">;</span>
+
+                <span class="s1">}</span>
+                <span class="s0">break;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span><span class="s0">;</span>
+
+    <span class="s0">public </span><span class="s1">CameraActivity(){</span>
+        <span class="s1">Log.i(TAG</span><span class="s0">,</span><span class="s2">&quot;Instantiated new &quot;</span><span class="s1">+</span><span class="s0">this</span><span class="s1">.getClass())</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onCreate(Bundle savedInstanceState) {</span>
+        <span class="s0">super</span><span class="s1">.onCreate(savedInstanceState)</span><span class="s0">;</span>
+        <span class="s1">requestWindowFeature(Window.FEATURE_NO_TITLE)</span><span class="s0">;</span>
+        <span class="s1">getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)</span><span class="s0">;</span>
+
+        <span class="s0">int </span><span class="s1">MY_PERMISSIONS_REQUEST_CAMERA=</span><span class="s3">0</span><span class="s0">;</span>
+        <span class="s4">// if camera permission is not given it will ask for it on device</span>
+        <span class="s0">if </span><span class="s1">(ContextCompat.checkSelfPermission(CameraActivity.</span><span class="s0">this, </span><span class="s1">Manifest.permission.CAMERA)</span>
+                <span class="s1">== PackageManager.PERMISSION_DENIED){</span>
+            <span class="s1">ActivityCompat.requestPermissions(CameraActivity.</span><span class="s0">this, new </span><span class="s1">String[] {Manifest.permission.CAMERA}</span><span class="s0">, </span><span class="s1">MY_PERMISSIONS_REQUEST_CAMERA)</span><span class="s0">;</span>
+        <span class="s1">}</span>
+        <span class="s4">// for storage permission kima tea l camera</span>
+        <span class="s0">if </span><span class="s1">(ContextCompat.checkSelfPermission(CameraActivity.</span><span class="s0">this, </span><span class="s1">Manifest.permission.WRITE_EXTERNAL_STORAGE)</span>
+                <span class="s1">== PackageManager.PERMISSION_DENIED){</span>
+            <span class="s1">ActivityCompat.requestPermissions(CameraActivity.</span><span class="s0">this, new </span><span class="s1">String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE}</span><span class="s0">, </span><span class="s1">MY_PERMISSIONS_REQUEST_CAMERA)</span><span class="s0">;</span>
+        <span class="s1">}</span>
+        <span class="s0">if </span><span class="s1">(ContextCompat.checkSelfPermission(CameraActivity.</span><span class="s0">this, </span><span class="s1">Manifest.permission.READ_EXTERNAL_STORAGE)</span>
+                <span class="s1">== PackageManager.PERMISSION_DENIED){</span>
+            <span class="s1">ActivityCompat.requestPermissions(CameraActivity.</span><span class="s0">this, new </span><span class="s1">String[] {Manifest.permission.READ_EXTERNAL_STORAGE}</span><span class="s0">, </span><span class="s1">MY_PERMISSIONS_REQUEST_CAMERA)</span><span class="s0">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">setContentView(R.layout.activity_camera)</span><span class="s0">;</span>
+
+        <span class="s1">mOpenCvCameraView=(CameraBridgeViewBase) findViewById(R.id.frame_Surface)</span><span class="s0">;</span>
+        <span class="s1">mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE)</span><span class="s0">;</span>
+        <span class="s1">mOpenCvCameraView.setCvCameraViewListener(</span><span class="s0">this</span><span class="s1">)</span><span class="s0">;</span>
+        <span class="s1">flip_camera=findViewById(R.id.flip_camera)</span><span class="s0">;</span>
+        <span class="s1">flip_camera.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View view) {</span>
+                <span class="s1">swapCamera()</span><span class="s0">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s0">;</span>
+        <span class="s1">take_picture_button=findViewById(R.id.take_picture_button)</span><span class="s0">;</span>
+        <span class="s1">take_picture_button.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View view) {</span>
+                <span class="s4">// to change the status when clicking</span>
+                <span class="s1">Toast.makeText(getApplicationContext()</span><span class="s0">,</span><span class="s2">&quot;The image is taken to your storage&quot;</span><span class="s0">,</span><span class="s1">Toast.LENGTH_SHORT).show()</span><span class="s0">;</span>
+                <span class="s0">if</span><span class="s1">(take_image==</span><span class="s3">0</span><span class="s1">)</span>
+                <span class="s1">{take_image=</span><span class="s3">1</span><span class="s0">;</span>
+                <span class="s1">}</span>
+                <span class="s0">else</span><span class="s1">{</span>
+                    <span class="s1">take_image=</span><span class="s3">0</span><span class="s0">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+
+        <span class="s1">})</span><span class="s0">;</span>
+    <span class="s1">}</span>
+    <span class="s0">private void </span><span class="s1">swapCamera()</span>
+    <span class="s1">{</span>
+        <span class="s1">mCameraId=mCameraId^</span><span class="s3">1</span><span class="s0">;</span>
+        <span class="s1">mOpenCvCameraView.disableView()</span><span class="s0">;</span>
+        <span class="s1">mOpenCvCameraView.setCameraIndex(mCameraId)</span><span class="s0">;</span>
+        <span class="s1">mOpenCvCameraView.enableView()</span><span class="s0">;</span>
+
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onResume() {</span>
+        <span class="s0">super</span><span class="s1">.onResume()</span><span class="s0">;</span>
+        <span class="s0">if </span><span class="s1">(OpenCVLoader.initDebug()){</span>
+            <span class="s4">//if load success</span>
+            <span class="s1">Log.d(TAG</span><span class="s0">,</span><span class="s2">&quot;Opencv initialization is done&quot;</span><span class="s1">)</span><span class="s0">;</span>
+            <span class="s1">mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)</span><span class="s0">;</span>
+        <span class="s1">}</span>
+        <span class="s0">else</span><span class="s1">{</span>
+            <span class="s4">//if not loaded</span>
+            <span class="s1">Log.d(TAG</span><span class="s0">,</span><span class="s2">&quot;Opencv is not loaded&quot;</span><span class="s1">)</span><span class="s0">;</span>
+            <span class="s1">OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0</span><span class="s0">,this,</span><span class="s1">mLoaderCallback)</span><span class="s0">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onPause() {</span>
+        <span class="s0">super</span><span class="s1">.onPause()</span><span class="s0">;</span>
+        <span class="s0">if </span><span class="s1">(mOpenCvCameraView !=</span><span class="s0">null</span><span class="s1">){</span>
+            <span class="s1">mOpenCvCameraView.disableView()</span><span class="s0">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s0">public void </span><span class="s1">onDestroy(){</span>
+        <span class="s0">super</span><span class="s1">.onDestroy()</span><span class="s0">;</span>
+        <span class="s0">if</span><span class="s1">(mOpenCvCameraView !=</span><span class="s0">null</span><span class="s1">){</span>
+            <span class="s1">mOpenCvCameraView.disableView()</span><span class="s0">;</span>
+        <span class="s1">}</span>
+
+    <span class="s1">}</span>
+
+    <span class="s0">public void </span><span class="s1">onCameraViewStarted(</span><span class="s0">int </span><span class="s1">width </span><span class="s0">,int </span><span class="s1">height){</span>
+        <span class="s1">mRgba=</span><span class="s0">new </span><span class="s1">Mat(height</span><span class="s0">,</span><span class="s1">width</span><span class="s0">, </span><span class="s1">CvType.CV_8UC4)</span><span class="s0">;</span>
+        <span class="s1">mGray =</span><span class="s0">new </span><span class="s1">Mat(height</span><span class="s0">,</span><span class="s1">width</span><span class="s0">,</span><span class="s1">CvType.CV_8UC1)</span><span class="s0">;</span>
+    <span class="s1">}</span>
+    <span class="s0">public void </span><span class="s1">onCameraViewStopped(){</span>
+        <span class="s1">mRgba.release()</span><span class="s0">;</span>
+    <span class="s1">}</span>
+    <span class="s0">public </span><span class="s1">Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame){</span>
+        <span class="s1">mRgba=inputFrame.rgba()</span><span class="s0">;</span>
+        <span class="s1">mGray=inputFrame.gray()</span><span class="s0">;</span>
+        <span class="s4">// camera prob when changed to front</span>
+        <span class="s0">if</span><span class="s1">(mCameraId==</span><span class="s3">1</span><span class="s1">)</span>
+        <span class="s1">{</span>
+            <span class="s1">Core.flip(mRgba</span><span class="s0">,</span><span class="s1">mRgba</span><span class="s0">,</span><span class="s1">-</span><span class="s3">1</span><span class="s1">)</span><span class="s0">;</span>
+            <span class="s1">Core.flip(mGray</span><span class="s0">,</span><span class="s1">mGray</span><span class="s0">,</span><span class="s1">-</span><span class="s3">1</span><span class="s1">)</span><span class="s0">;</span>
+        <span class="s1">}</span>
+        <span class="s4">// fct take img</span>
+        <span class="s1">take_image=take_image_function_rgb(take_image</span><span class="s0">,</span><span class="s1">mRgba)</span><span class="s0">;</span>
+        <span class="s0">return </span><span class="s1">mRgba</span><span class="s0">;</span>
+
+    <span class="s1">}</span>
+
+    <span class="s0">private int </span><span class="s1">take_image_function_rgb(</span><span class="s0">int </span><span class="s1">take_image</span><span class="s0">, </span><span class="s1">Mat mRgba) {</span>
+        <span class="s0">if</span><span class="s1">(take_image==</span><span class="s3">1</span><span class="s1">) {</span>
+            <span class="s1">Mat save_mat = </span><span class="s0">new </span><span class="s1">Mat()</span><span class="s0">;</span>
+            <span class="s1">Core.flip(mRgba.t()</span><span class="s0">, </span><span class="s1">save_mat</span><span class="s0">, </span><span class="s3">1</span><span class="s1">)</span><span class="s0">;</span>
+            <span class="s1">Imgproc.cvtColor(save_mat</span><span class="s0">, </span><span class="s1">save_mat</span><span class="s0">, </span><span class="s1">Imgproc.COLOR_RGBA2BGRA)</span><span class="s0">;</span>
+            <span class="s4">// creating folder</span>
+            <span class="s1">File folder = </span><span class="s0">new </span><span class="s1">File(Environment.getExternalStorageDirectory().getPath() + </span><span class="s2">&quot;/OpenCV_Camera&quot;</span><span class="s1">)</span><span class="s0">;</span>
+            <span class="s4">// checking if the file exist</span>
+            <span class="s0">boolean </span><span class="s1">success=</span><span class="s0">true;</span>
+            <span class="s0">if </span><span class="s1">(!folder.exists()) {</span>
+                <span class="s1">success=folder.mkdirs()</span><span class="s0">;</span>
+            <span class="s1">}</span>
+            <span class="s4">// unique file name for each image</span>
+            <span class="s1">SimpleDateFormat sdf = </span><span class="s0">new </span><span class="s1">SimpleDateFormat(</span><span class="s2">&quot;yyyy-MM-dd_HH-mm-ss&quot;</span><span class="s1">)</span><span class="s0">;</span>
+            <span class="s1">String currentDayAndTime = sdf.format(</span><span class="s0">new </span><span class="s1">Date())</span><span class="s0">;</span>
+            <span class="s4">// unique name generation with date</span>
+            <span class="s1">String filename = Environment.getExternalStorageDirectory().getPath() + </span><span class="s2">&quot;/OpenCV_Camera/&quot; </span><span class="s1">+ currentDayAndTime + </span><span class="s2">&quot;.jpg&quot;</span><span class="s0">;</span>
+            <span class="s4">//write save_mat</span>
+            <span class="s1">Imgcodecs.imwrite(filename</span><span class="s0">,</span><span class="s1">save_mat)</span><span class="s0">;</span>
+            <span class="s1">take_image=</span><span class="s3">0</span><span class="s0">;</span>
+        <span class="s1">}</span>
+        <span class="s0">return </span><span class="s1">take_image</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+<span class="s1">}</span></pre>
+</body>
+</html>
