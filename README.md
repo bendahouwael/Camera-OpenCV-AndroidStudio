@@ -1,1 +1,1 @@
-OpenCV Camera implementation and testing on Android Studio
+OpenCV Camera implementation and testing on Android Studio.
