@@ -1,2 +1,1 @@
-"# OpenCV-Camera-Android" 
-"# OpenCV-Camera-Android" 
+OpenCV Camera implementation and testing on Android Studio
